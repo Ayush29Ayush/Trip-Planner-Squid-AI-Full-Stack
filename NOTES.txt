@@ -1,0 +1,34 @@
+1. Go to squid.cloud and create an account.
+2. Go to onboarding section and select "I want to build with an empty starter app".
+3. Enter the required details and click on "Create".
+4. You will get a command, copy and paste it in the terminal.
+5. After the installation is successful, now you will have a backend and a frontend directory.
+6. Use "npm start" to start the app.
+
+#! Backend
+* Allows us to create an api and interact with data securely.
+* Interact with some of the AI integrations for our applications.
+* Backend will be using "SQUID BACKEND SDK"
+
+#! Frontend
+* It will be the client which will interact with the squid backend.
+* Access data sources/AI.
+* Will do all of the things that a client side should do.
+* Frontend will be using "SQUID CLIENT SDK" which is wrapped either by React/Angular SDK.
+
+These SDK provided by squid contains lots of functionality which will make it possible for us to integrate our application with the data sources + AI features.
+--------------------------------------------------------------
+
+#! SQUID BACKEND SETUP and defining our database schema
+1. Go to console.squid.cloud and open Integrations section.
+2. Click on built_in_db option under Current Integrations. Then click on the triple dots and select "Schema".
+3. Now add a new collection named "trips" but before that we have to figure out the fields that we want to have for our trips in the type of information that we want to store.
+4. For now, lets add "startDate", "endDate", "country" and "notes".
+5. Always give description to each field so that the AI that will interact with our data knows what this field means.
+a) startDate: Date : required : description: "The start date of the trip"
+b) endDate: Date : required : description: "The end date of the trip"
+c) country: String : required : description: "The country of the trip"
+d) notes: Array: required : description: "Notes related to the trip"
+e) id : String: primary key : required : description: "The unique id of the trip"
+6. Now click on save schema.
+7. Now there's a button "Query with AI" where we can ask questions about it and it will actually give us some response. This is the "SquidAI Chat".
