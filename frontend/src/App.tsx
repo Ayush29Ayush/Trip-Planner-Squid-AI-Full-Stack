@@ -1,5 +1,6 @@
 import './App.css';
 import AddTrip from './components/AddTripForm';
+import AskAI from './components/AskAI';
 import TripList from './components/TripList';
 import { Trip } from './types';
 import { useCollection, useQuery } from '@squidcloud/react';
@@ -45,6 +46,7 @@ function App() {
   return (
     <div className="card">
       {/* <h1>Hello World</h1> */}
+      <AskAI />
       <AddTrip />
       <TripList
         trips={trips.data.map((trip) => trip.data)}
