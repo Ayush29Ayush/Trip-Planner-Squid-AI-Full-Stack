@@ -353,3 +353,61 @@ function AskAI() {
 
 export default AskAI;
 '''
+
+#! Deployment
+* Since our backend is running in our local environment, we need to deploy it.
+* Approach - 1 => Go to your Squid Cloud account and click on "Overview", then go to "Deploy your backend".
+* Approach - 2 => cd backend && npm run deploy
+'''
+PS D:\Trip Planner Squid AI Project\trip-planner\backend> npm run deploy
+
+> backend@0.0.1 deploy
+> squid deploy
+
+Building code bundle...
+
+> backend@0.0.1 build
+> squid build
+
+Building...
+asset index.js 600 KiB [emitted] [minimized] (name: main) 2 related assets
+asset bundle.zip 516 KiB [emitted]
+asset public/README.md 946 bytes [emitted] [from: src/public/README.md] [copied]
+asset index.d.ts 210 bytes [emitted]
+asset service/aiQuery.d.ts 204 bytes [emitted]
+asset service/index.d.ts 27 bytes [emitted]
+chunk (runtime: main) index.js (main) 830 KiB (javascript) 670 bytes (runtime) [entry] [rendered]
+runtime modules 670 bytes 3 modules
++ 262 modules
+2024-08-08 11:33:28: webpack compiled
+Build succeeded.
+Deploying code bundle for appId '0h0xvr0wi19qsu7fub' to the 'dev' environment...
+Code deployed
+PS D:\Trip Planner Squid AI Project\trip-planner\backend>
+'''
+
+* Now go to main.tsx and comment out squidDeveloperId
+'''
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.tsx';
+import { SquidContextProvider } from '@squidcloud/react';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <SquidContextProvider
+    options={{
+      appId: import.meta.env.VITE_SQUID_APP_ID,
+      region: import.meta.env.VITE_SQUID_REGION,
+      environmentId: import.meta.env.VITE_SQUID_ENVIRONMENT_ID,
+      // squidDeveloperId: import.meta.env.VITE_SQUID_DEVELOPER_ID, //! Commenting this out tells the squid app to use the deployed backend instead of the local one
+    }}
+  >
+    <App />
+  </SquidContextProvider>,
+);
+'''
+
+* Now cd frontend and use "npm run dev"
+
+* You can also go to squid cloud and to the "Backend" section and check various details on executables, triggers, OpenAI api, etc.
