@@ -37,7 +37,7 @@ e) id : String: primary key : required : description: "The unique id of the trip
 1. Clean up App.tsx, App.css and index.css
 2. In src directory, create a components folder and add AddTripForm.tsx along with its css file.
 ** AddTripForm.tsx
-"
+'''
 import { useState, useEffect } from 'react';
 import { useCollection } from '@squidcloud/react';
 import './AddTripForm.css';
@@ -97,6 +97,259 @@ function AddTrip() {
 }
 
 export default AddTrip;
-"
+'''
 4. Now add this component to App.tsx
 5. Add a data entry from the UI and check whether it got added or not from Inspect element or from squid website under the integrations section.
+
+#! Viewing Trips Components
+* Create 2 components
+a) One for rendering an indicidual trip => Trip.tsx
+b) One for rendering the list of trips => TripList.tsx
+
+
+#! Trip.tsx 
+1. There are a bunch of functionality that we need like 
+* View all of the different notes
+* Add a new note
+* Delete a note
+* Delete the trip itself
+** Trip.tsx
+'''
+import { format } from 'date-fns';
+import { Trip } from '../types';
+import { useState } from 'react';
+
+//! Here, we are defining the type of the props as we are working on a typescript file so defining types of any variable is a must.
+type Props = {
+  trip: Trip; // Defines the trip schema desclared in our squid db as a Trip type
+  onDelete: (id: string) => void; // Defines the onDelete function which will take id as functional parameter and return type is void
+  onAddNote: (tripId: string, note: string) => void; // Defines the onAddNote function which will take tripId and note as functional parameter and return type is void
+  onDeleteNote: (tripId: string, noteIndex: number) => void; // Defines the onDeleteNote function which will take tripId and noteIndex as functional parameter and return type is void
+  index: number; // Defines the index as number
+};
+
+function TripCard({ trip, onDelete, onAddNote, onDeleteNote, index }: Props) {
+  const [newNote, setNewNote] = useState('');
+
+  const handleAddNote = (tripId: string, note: string) => {
+    if (note.trim() !== '') {
+      onAddNote(tripId, note.trim());
+      setNewNote('');
+    }
+  };
+
+  return (
+    <div className="trip-card" key={index}>
+      <h4>
+        <span>{format(trip.startDate, 'PPP')} - {format(trip.endDate, 'PPP')}</span>
+        <button className="country-button">{trip.country}</button>
+        <button className="delete-button" onClick={() => onDelete(trip.id)}>Delete</button>
+      </h4>
+      <ul>
+        {trip.notes.map((note, noteIndex) => (
+          <li key={noteIndex} className="note">
+            {note}{' '}
+            <button className="delete-button" onClick={() => onDeleteNote(trip.id, noteIndex)}>x</button>
+          </li>
+        ))}
+      </ul>
+      <div className="note-form">
+        <input type="text" className="note-input" value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Add a note" />
+        <button className="add-note-button" onClick={() => handleAddNote(trip.id, newNote)}>Add Note</button>
+      </div>
+    </div>
+  );
+}
+
+export default TripCard
+'''
+
+#! TripList.tsx
+'''
+import React from 'react';
+import { Trip } from '../types';
+import TripCard from './Trip';
+import './Trip.css';
+
+type Props = {
+  trips: Trip[]; // Defines the trip schema desclared in our squid db as a array of Trip type
+  onDelete: (id: string) => void;
+  onAddNote: (tripId: string, note: string) => void;
+  onDeleteNote: (tripId: string, noteIndex: number) => void;
+};
+
+function TripList({ trips, onDelete, onAddNote, onDeleteNote }: Props) {
+  return (
+    <div className="trip-list-container">
+      {trips &&
+        trips.map((trip, index) => (
+          <TripCard
+            key={index}
+            trip={trip}
+            index={index}
+            onDelete={onDelete}
+            onAddNote={onAddNote}
+            onDeleteNote={onDeleteNote}
+          />
+        ))}
+    </div>
+  );
+}
+
+export default TripList;
+'''
+
+#! App.tsx
+'''
+import './App.css';
+import AddTrip from './components/AddTripForm';
+import TripList from './components/TripList';
+import { Trip } from './types';
+import { useCollection, useQuery } from '@squidcloud/react';
+
+function App() {
+  const collection = useCollection<Trip>('trips'); // This is the name in the database. It will grab the trips collection from the db
+  const trips = useQuery(collection.query()); // This is a hook provided by squid to get data i.e all of the trips from the db
+
+  console.log(trips)
+  console.log(trips.data)
+
+  //! Helper function that will help us find a trip that needs to be modified
+  const findTrip = (id: string) => {
+    return trips.data.find((trip) => trip.data.id === id)
+  }
+
+  //! Function that will be called when we need to delete a trip
+  const onDelete = (id: string) => {
+    const trip = findTrip(id);
+    if (trip) trip.delete() //! This will delete the trip from the db, .delete() is a function provided by squid
+  };
+
+  const onAddNote = (tripId: string, note: string) => {
+    const trip = findTrip(tripId);
+    if (!trip) return
+    const notes = trip.data.notes
+    notes.push(note)
+    trip.update({
+      notes: notes
+    })
+  };
+
+
+  const onDeleteNote = (tripId: string, noteIndex: number) => {
+    const trip = findTrip(tripId);
+    if (!trip) return
+    const notes = trip.data.notes;
+    //! This will remove the note at the specified index, .update() is a function provided by squid
+    trip.update({
+      notes: notes.filter((_, index) => index !== noteIndex)
+    })
+  };
+
+  return (
+    <div className="card">
+      {/* <h1>Hello World</h1> */}
+      <AddTrip />
+      <TripList
+        trips={trips.data.map((trip) => trip.data)}
+        onDelete={onDelete}
+        onAddNote={onAddNote}
+        onDeleteNote={onDeleteNote}
+      />
+    </div>
+  );
+}
+
+export default App;
+'''
+
+#! Adding AI Integration
+* We need to build in this AI integration that allows us to interact with our database.
+* We can use a decorator to mark a function that we define inside of this class as executable so that we can use it from the frontend and execute some kind of operation i.e interacting with an AI.
+
+* Rename example-service.ts from backend/src to aiQuery.ts
+** aiQuery.ts
+'''
+import {
+  SquidService,
+  secureDatabase,
+  webhook,
+  executable,
+} from '@squidcloud/backend';
+
+export class ExampleService extends SquidService {
+  @secureDatabase('all', 'built_in_db')
+  allowAccessToBuiltInDb(): boolean {
+    return true;
+  }
+  // @webhook('resetCounter')
+  // async resetCounter() {
+  //   await this.squid.collection('count').doc('count').delete();
+  // }
+
+  @executable()
+  async askQuestion(question: string): Promise<string> {
+    const aiResponse = await this.squid
+      .ai()
+      .executeAiQuery('built_in_db', question);
+
+    console.log(`
+      Question: ${question}
+      Query: ${aiResponse.executedQuery ?? 'No Query executed'}
+      Explanation: ${aiResponse.explanation ?? 'No Explanation'}
+      `);
+
+    return aiResponse.answer;
+  }
+}
+'''
+
+#! AskAI.tsx
+'''
+import { useState } from 'react';
+import { useSquid } from '@squidcloud/react';
+import './AskAI.css';
+import LoadingIndicator from './LoadingIndicator';
+
+function AskAI() {
+  const [text, setText] = useState('');
+  const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(false);
+  const squid = useSquid();
+
+  //! Here we will implement the 'askPressed' function which is going to integrate with the AI that we wrote in the backend
+  const askPressed = async () => {
+    if (!text) return;
+    
+    setLoading(true);
+    const result = await squid.executeFunction('askQuestion', text);
+    setResult(result);
+    setText('');
+    setLoading(false);
+  };
+
+  const closeResult = () => {
+    setResult('');
+  };
+
+  return (
+    <div className="container">
+      <h3>Ask a Question!</h3>
+      <input type="text" value={text} onChange={(e) => setText(e.target.value)} />
+      {loading ? (
+        <LoadingIndicator />
+      ) : (
+        <button onClick={askPressed}>Ask</button>
+      )}
+      {result && (
+        <div className="result-container">
+          <textarea value={result} rows={4} />
+          <button onClick={closeResult} className="close-button"></button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default AskAI;
+'''
